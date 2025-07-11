@@ -979,7 +979,14 @@ variables:
       'domofon': 'Домофон',
       'MainPTZCamera': 'Поворотная',
       'backyard': 'Задний двор',
-      'garage': 'Гараж'
+      'garage': 'Гараж',
+      'povorot': 'Хозблок',
+      'hozblock': 'Задний двор',
+      'MainHouseCam': 'На доме',
+      'gryadki': 'Грядки',
+      'zona_otdiha': 'Зона отдыха',
+      'banya': 'Баня',
+      'terrassa': 'Террасса'
     }.get(camera, camera | replace('_', ' ') | title) }}
   input_severity: !input review_severity
   severity: "{{trigger.payload_json['after']['severity'] if trigger.id == 'frigate-event'}}"
