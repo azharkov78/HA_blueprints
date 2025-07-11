@@ -1588,8 +1588,8 @@ actions:
                     # If the user has configured specific objects we eliminate objects not in that list
                     # Otherwise we loop through all objects and replace any verified objects with the sub label
                     label: >-
-                                    {% if update_sub_label %}
-                                      {% set data = namespace(labels=[]) %}
+                      {% if update_sub_label %}
+                          {% set data = namespace(labels=[]) %}
                                       {% if labels|length %}
                                         {% for obj in objects|select('in', labels) %}
                                           {% if "-verified" in obj %}
@@ -1621,13 +1621,13 @@ actions:
                                                 'bird': 'Птица'
                                               }.get(obj, obj | replace('_', ' ') | title) ] %}
                                           {% endif %}
-                    {% endfor %}
-                    {% set data.labels = data.labels + sub_labels %}
-                    {{ data.labels | unique | list | sort | join(", ") }}
-                  {% endif %}
-                {% else %}
-                  {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
-                {% endif %}
+                                        {% endfor %}
+                                        {% set data.labels = data.labels + sub_labels %}
+                                        {{ data.labels | unique | list | sort | join(", ") }}
+                                      {% endif %}
+                                    {% else %}
+                                      {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
+                                    {% endif %}
                     # import the title and message again so any sublabel, object or zone changes are captured.
                     title: !input title
                     message: !input message
