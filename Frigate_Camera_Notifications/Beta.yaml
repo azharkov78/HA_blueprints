@@ -975,13 +975,12 @@ variables:
   input_camera_name: "{{input_camera|expand|map(attribute='attributes.camera_name', default='none')|list}}"
   camera: "{{trigger.payload_json['after']['camera'] if trigger.id == 'frigate-event'}}"
   camera_name: >-
-  {% set mapping = {
-    'domofon': 'Домофон',
-    'MainPTZCamera': 'Поворотная',
-    'backyard': 'Задний двор',
-    'garage': 'Гараж'
-  } %}
-  {{ mapping.get(camera, camera | replace('_', ' ') | title) }}
+    {{ {
+      'domofon': 'Домофон',
+      'MainPTZCamera': 'Поворотная',
+      'backyard': 'Задний двор',
+      'garage': 'Гараж'
+    }.get(camera, camera | replace('_', ' ') | title) }}
   input_severity: !input review_severity
   severity: "{{trigger.payload_json['after']['severity'] if trigger.id == 'frigate-event'}}"
   type: "{{trigger.payload_json['type'] if trigger.id == 'frigate-event'}}"
@@ -1100,39 +1099,47 @@ actions:
               id: "{{ detections[0] }}"
               objects: "{{ event['after']['data']['objects'] }}"
               sub_labels: "{{ event['after']['data']['sub_labels'] }}"
-              label: >-
-              {% set mapping = {
-                  'person': 'Человек',
-                  'car': 'Машина',
-                  'dog': 'Собака',
-                  'cat': 'Кошка',
-                  'package': 'Посылка',
-                  'bird': 'Птица'
-                } %}
-                {% if update_sub_label %}
-                  {% set data = namespace(labels=[]) %} 
-                  {% if labels|length %}
-                    {% for obj in objects|select('in', labels) %}
-                      {% if "-verified" in obj %}
-                      {% else %}
-                        {% set data.labels = data.labels + [mapping.get(obj, obj | replace('_', ' ') | title)] %}
-                      {% endif %}
-                    {% endfor %}
-                    {% set data.labels = data.labels + sub_labels %}
-                    {{ data.labels | unique | list | sort | join(", ") }}
-                  {% else %}
-                    {% for obj in objects %}
-                      {% if "-verified" in obj %}
-                      {% else %}
-                        {% set data.labels = data.labels + [mapping.get(obj, obj | replace('_', ' ') | title)] %}
-                      {% endif %}
-                    {% endfor %}
-                    {% set data.labels = data.labels + sub_labels %}
-                    {{ data.labels | unique | list | sort | join(", ") }}
-                  {% endif %}
-                {% else %}
-                  {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
-                {% endif %}
+               label: >-
+  {% if update_sub_label %}
+    {% set data = namespace(labels=[]) %}
+    {% if labels|length %}
+      {% for obj in objects|select('in', labels) %}
+        {% if "-verified" in obj %}
+        {% else %}
+          {% set data.labels = data.labels + [
+            {
+              'person': 'Человек',
+              'car': 'Машина',
+              'dog': 'Собака',
+              'cat': 'Кошка',
+              'package': 'Посылка',
+              'bird': 'Птица'
+            }.get(obj, obj | replace('_', ' ') | title) ] %}
+        {% endif %}
+      {% endfor %}
+      {% set data.labels = data.labels + sub_labels %}
+      {{ data.labels | unique | list | sort | join(", ") }}
+    {% else %}
+      {% for obj in objects %}
+        {% if "-verified" in obj %}
+        {% else %}
+          {% set data.labels = data.labels + [
+            {
+              'person': 'Человек',
+              'car': 'Машина',
+              'dog': 'Собака',
+              'cat': 'Кошка',
+              'package': 'Посылка',
+              'bird': 'Птица'
+            }.get(obj, obj | replace('_', ' ') | title) ] %}
+        {% endif %}
+      {% endfor %}
+      {% set data.labels = data.labels + sub_labels %}
+      {{ data.labels | unique | list | sort | join(", ") }}
+    {% endif %}
+  {% else %}
+    {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
+  {% endif %}
               # Dynamic Variables per event
               # after_zones: "{{ event['after']['data']['zones'] }}"
               # zone_multi_filter: "{{zone_only and zone_multi and after_zones|length and zones and zones |reject('in', after_zones) |list |length == 0 }}"
