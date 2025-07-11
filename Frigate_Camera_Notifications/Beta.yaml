@@ -1138,7 +1138,7 @@ actions:
                     {{ data.labels | unique | list | sort | join(", ") }}
                   {% endif %}
                 {% else %}
-                  {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
+                  {{ objects | map('replace', '_', ' ') | map('title') | join(', ') }}
                 {% endif %}
               # Dynamic Variables per event
               # after_zones: "{{ event['after']['data']['zones'] }}"
@@ -1626,7 +1626,7 @@ actions:
                                         {{ data.labels | unique | list | sort | join(", ") }}
                                       {% endif %}
                                     {% else %}
-                                      {{ objects | map(attribute='replace','_', ' ') | map('title') | join(', ') }}
+                                      {{ objects | map('replace', '_', ' ') | map('title') | join(', ') }}
                                     {% endif %}
                     # import the title and message again so any sublabel, object or zone changes are captured.
                     title: !input title
