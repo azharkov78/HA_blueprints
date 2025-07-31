@@ -1815,7 +1815,7 @@ actions:
                                         - "{{ event['type'] == 'end' }}"
                                         - "{{ video | length > 0 }}"
                                       sequence:
-                                        - variables: # <-- CORRECTED: Variables are now correctly defined
+                                        - variables:
                                             video_url: "{{video | replace(base_url, telegram_base_url)}}"
                                             caption_text: >-
                                               {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} on the {{camera_name.get(camera,camera)}}.
@@ -1828,7 +1828,7 @@ actions:
                                               🆔(id {{id}})
                                               👀 Камера {{ camera_name.get(camera,camera) }}
                                               {% if llm_response is defined and llm_response.response_text is defined and llm_response.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response.response_text }} {% endif %}
-                                        - service: telegram_bot.send_video # <-- CORRECTED: Service call is a separate action
+                                        - service: telegram_bot.send_video
                                           data:
                                             target: "{{telegram_chat_id}}"
                                             video: "{{video_url}}"
