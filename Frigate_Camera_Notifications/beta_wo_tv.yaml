@@ -1,5 +1,5 @@
 blueprint:
-  name: Frigate Notifications (0.1) with Custom Mapping wo TV
+  name: Frigate Notifications (0.2) with Custom Mapping wo TV
   author: azharkov
   homeassistant:
     min_version: 2024.11.0
@@ -830,75 +830,6 @@ blueprint:
           selector:
             action: {}
           default: []
-    # tv_notifications: # Removed the entire tv_notifications section
-    #   name: "# TV Notifications"
-    #   description: These are TV Notification Options
-    #   icon: mdi:television
-    #   collapsed: true
-    #   input:
-    #     tv:
-    #       name: TV Notification (Optional)
-    #       description: |
-    #         Set to true if you are notifying an Android/Fire TV
-    #         Can also be used to prioritise snapshots on the TV over Android mobile apps when notifying a mixed device group.
-    #         Base URL must be set
-    #         The below settings are for TV notifications only
-    #       default: false
-    #       selector:
-    #         boolean:
-    #     tv_position:
-    #       name: TV Notification Position (Optional)
-    #       description: Set the position of the notification on your TV
-    #       default: center
-    #       selector:
-    #         select:
-    #           mode: dropdown
-    #           options:
-    #             - bottom-right
-    #             - bottom-left
-    #             - top-right
-    #             - top-left
-    #             - center
-    #     tv_size:
-    #       name: TV Notification Size (Optional)
-    #       description: Set the size of the notification on your TV.
-    #       default: large
-    #       selector:
-    #         select:
-    #           mode: dropdown
-    #           options:
-    #             - small
-    #             - medium
-    #             - large
-    #             - max
-    #     tv_duration:
-    #       name: TV Notification Duration (Optional)
-    #       description: The duration (in seconds) that the notification will display on your TV.
-    #       default: 10
-    #       selector:
-    #         number:
-    #           max: 300
-    #           min: 0
-    #           unit_of_measurement: seconds
-    #     tv_transparency:
-    #       name: TV notification Transparency (Optional)
-    #       description: Set the transparency of the notification on your TV.
-    #       default: 0%
-    #       selector:
-    #         select:
-    #           mode: dropdown
-    #           options:
-    #             - 0%
-    #             - 25%
-    #             - 50%
-    #             - 75%
-    #             - 100%
-    #     tv_interrupt:
-    #       name: TV Notification Interrupt (Optional)
-    #       description: "If set to true the notification is interactive and can be dismissed or selected to display more details. Depending on the running app (e.g., Netflix), this may stop playback."
-    #       default: false
-    #       selector:
-    #         boolean:
     debug:
       name: "# DEBUG"
       description: These are DEBUG Options
@@ -1008,13 +939,6 @@ variables:
   input_volume: !input volume
   volume: "{{ (1 * input_volume|int(100))/100 }}"
   sticky: !input sticky
-  # Removed tv related variables
-  # tv: !input tv
-  # tv_position: !input tv_position
-  # tv_size: !input tv_size
-  # tv_duration: !input tv_duration
-  # tv_transparency: !input tv_transparency
-  # tv_interrupt: !input tv_interrupt
   debug: !input debug
   redacted: !input redacted
   master_condition: !input master_condition
@@ -1658,8 +1582,8 @@ actions:
                                       content-type: "{{ 'application/vnd.apple.mpegurl' if 'm3u8' in video else 'mp4' if 'mp4' in video else 'jpeg' if 'jpg' in attachment else 'gif' }}"
                                     push:
                                       sound:
-                                        name: "{{ iif(silent_update, 'none', sound) }}"
-                                        volume: "{{ iif((silent_update or sound == 'none'), 0, volume) }}"
+                                        name: "{{sound}}"
+                                        volume: "{{ iif(sound == 'none', 0, volume) }}"
                                       interruption-level: "{{ iif(critical, 1, interruption_level) }}"
                                     entity_id: "{{ios_live_view}}"
                                     actions:
@@ -1707,3 +1631,6 @@ actions:
                                       value: |
                                         {% set newIds = id + '|' + states(tts_helper) %}
                                         {{ newIds[:250] }}
+                                    target:
+                                      entity_id: "{{tts_helper}}"
+              until: "{{ not wait.trigger or wait.trigger.payload_json['type'] == 'end' }}"
