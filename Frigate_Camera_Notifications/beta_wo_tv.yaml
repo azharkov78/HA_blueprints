@@ -1,5 +1,5 @@
 blueprint:
-  name: Frigate Notifications (0.14.0.3h) with Custom Mapping
+  name: Frigate Notifications (0.1) with Custom Mapping without TV
   author: azharkov
   homeassistant:
     min_version: 2024.11.0
