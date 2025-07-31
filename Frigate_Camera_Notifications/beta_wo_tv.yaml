@@ -814,56 +814,58 @@ actions:
                     choose:
                       - conditions: "{{ custom_action_auto |length > 0 }}"
                         sequence: !input "custom_action_auto"
-                  - alias: "Send Notification"
-                    choose:
-                      - conditions: "{{ telegram }}"
+          - alias: "Send Notification"
+            choose:
+              - conditions: "{{ telegram }}"
+                sequence:
+                  - variables:
+                      # Define variables needed for this specific Telegram action here
+                      photo_url: "{{attachment | replace( base_url, telegram_base_url )}}"
+                      caption_text: >-
+                        {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} on the {{camera_name.get(camera,camera)}}.
+                        {% elif (label == "person") %}🙍‍♂️ Someone on the {{camera_name.get(camera,camera)}}.
+                        {% elif (label == "cat") %}🐱 Cat on the {{camera_name.get(camera,camera)}}.
+                        {% elif (label == "dog") %}🐶 Dog on the {{camera_name.get(camera,camera)}}.
+                        {%elif (label == "bird") %}🦅 Bird on the {{camera_name.get(camera,camera)}}.
+                        {%endif %}
+                        🕘 Detected at {{start_time | timestamp_custom("%H-%M") }}
+                        👀 Camera: {{ camera_name.get(camera,camera) }}
+                        {% if llm_response_image is defined and llm_response_image.response_text is defined and llm_response_image.response_text|trim != '' %} 🔤 AI response: {{ llm_response_image.response_text }} {% endif %}
+                  # The actual service call should be a separate action
+                  - service: telegram_bot.send_photo
+                    data:
+                      target: "{{telegram_chat_id}}"
+                      photo: "{{photo_url}}"
+                      caption: "{{caption_text}}"
+                      inline_keyboard:
+                        - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
+                          title: "{{button_1}}"
+                          uri: "{{url_1}}"
+                          icon: "{{icon_1}}"
+                          destructive: "{{not '/' in url_1}}"
+                        - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
+                          title: "{{button_2}}"
+                          uri: "{{url_2}}"
+                          icon: "{{icon_2}}"
+                          destructive: "{{not '/' in url_2}}"
+                        - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
+                          title: "{{button_3}}"
+                          uri: "{{url_3}}"
+                          icon: "{{icon_3}}"
+                          destructive: "{{not '/' in url_3}}"
+                    response_variable: sent_photo_info # Store response to get message_id
+                  # Action to delete the photo after a delay
+                  - choose:
+                      - conditions: "{{ telegram_delete_photo_after > 0 }}"
                         sequence:
-                          - variables:
-                              photo_url: "{{attachment | replace( base_url, telegram_base_url )}}"
-                              # Construct the caption, similar to your example, incorporating LLM if available
-                              caption_text: >-
-                                {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} на улице.
-                                {% elif (label == "person") %}🙍‍♂️ Кто-то на улице.
-                                {% elif (label == "cat") %}🐱 Кот на улице.
-                                {% elif (label == "dog") %}🐶 Собака на улице.
-                                {%elif (label == "bird") %}🦅 Птица на улице.
-                                {%endif %}
-                                🕘 Время обнаружения {{start_time | timestamp_custom("%H-%M") }} часов.
-                                👀 Камера {{ camera_name.get(camera,camera) }}
-                                {% if llm_response_image is defined and llm_response_image.response_text is defined and llm_response_image.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response_image.response_text }} {% endif %}
-                              # Use a separate action for deleting the photo after a delay
-                              - service: telegram_bot.send_photo
-                                data:
-                                  target: "{{telegram_chat_id}}"
-                                  photo: "{{photo_url}}"
-                                  caption: "{{caption_text}}"
-                                  inline_keyboard:
-                                    - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
-                                      title: "{{button_1}}"
-                                      uri: "{{url_1}}"
-                                      icon: "{{icon_1}}"
-                                      destructive: "{{not '/' in url_1}}"
-                                    - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
-                                      title: "{{button_2}}"
-                                      uri: "{{url_2}}"
-                                      icon: "{{icon_2}}"
-                                      destructive: "{{not '/' in url_2}}"
-                                    - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
-                                      title: "{{button_3}}"
-                                      uri: "{{url_3}}"
-                                      icon: "{{icon_3}}"
-                                      destructive: "{{not '/' in url_3}}"
-                                  response_variable: sent_photo_info # Store response to get message_id
-                              # Action to delete the photo after a delay
-                              - choose:
-                                  - conditions: "{{ telegram_delete_photo_after > 0 }}"
-                                    sequence:
-                                      - delay:
-                                          seconds: "{{ telegram_delete_photo_after }}"
-                                      - service: telegram_bot.delete_message
-                                        data:
-                                          chat_id: "{{ sent_photo_info.chats[0].chat_id }}"
-                                          message_id: "{{ sent_photo_info.chats[0].message_id }}"
+                          - delay:
+                              seconds: "{{ telegram_delete_photo_after }}"
+                          - service: telegram_bot.delete_message
+                            data:
+                              chat_id: "{{ sent_photo_info.chats[0].chat_id }}"
+                              message_id: "{{ sent_photo_info.chats[0].message_id }}"
+                              # Consider adding continue_on_error: true here if desired
+                              # continue_on_error: true
                       - conditions: "{{ not notify_group_target }}"
                         sequence:
                           - device_id: !input notify_device
