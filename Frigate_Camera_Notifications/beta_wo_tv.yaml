@@ -1815,7 +1815,7 @@ actions:
                                         - "{{ event['type'] == 'end' }}"
                                         - "{{ video | length > 0 }}"
                                       sequence:
-                                        - variables:
+                                        - variables: # <-- CORRECTED: Variables are now correctly defined
                                             video_url: "{{video | replace(base_url, telegram_base_url)}}"
                                             caption_text: >-
                                               {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} on the {{camera_name.get(camera,camera)}}.
@@ -1828,28 +1828,28 @@ actions:
                                               🆔(id {{id}})
                                               👀 Камера {{ camera_name.get(camera,camera) }}
                                               {% if llm_response is defined and llm_response.response_text is defined and llm_response.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response.response_text }} {% endif %}
-                                          - service: telegram_bot.send_video
-                                            data:
-                                              target: "{{telegram_chat_id}}"
-                                              video: "{{video_url}}"
-                                              caption: "{{caption_text}}"
-                                              inline_keyboard:
-                                                - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
-                                                  title: "{{button_1}}"
-                                                  uri: "{{url_1}}"
-                                                  icon: "{{icon_1}}"
-                                                  destructive: "{{not '/' in url_1}}"
-                                                - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
-                                                  title: "{{button_2}}"
-                                                  uri: "{{url_2}}"
-                                                  icon: "{{icon_2}}"
-                                                  destructive: "{{not '/' in url_2}}"
-                                                - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
-                                                  title: "{{button_3}}"
-                                                  uri: "{{url_3}}"
-                                                  icon: "{{icon_3}}"
-                                                  destructive: "{{not '/' in url_3}}"
-                                              parse_mode: html
+                                        - service: telegram_bot.send_video # <-- CORRECTED: Service call is a separate action
+                                          data:
+                                            target: "{{telegram_chat_id}}"
+                                            video: "{{video_url}}"
+                                            caption: "{{caption_text}}"
+                                            inline_keyboard:
+                                              - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
+                                                title: "{{button_1}}"
+                                                uri: "{{url_1}}"
+                                                icon: "{{icon_1}}"
+                                                destructive: "{{not '/' in url_1}}"
+                                              - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
+                                                title: "{{button_2}}"
+                                                uri: "{{url_2}}"
+                                                icon: "{{icon_2}}"
+                                                destructive: "{{not '/' in url_2}}"
+                                              - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
+                                                title: "{{button_3}}"
+                                                uri: "{{url_3}}"
+                                                icon: "{{icon_3}}"
+                                                destructive: "{{not '/' in url_3}}"
+                                          parse_mode: html
                                     default:
                                       - variables:
                                           photo_url: "{{attachment | replace( base_url, telegram_base_url )}}"
