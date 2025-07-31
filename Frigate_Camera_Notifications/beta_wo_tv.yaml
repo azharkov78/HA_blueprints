@@ -1,5 +1,5 @@
 blueprint:
-  name: Frigate Notifications (0.2) with Custom Mapping and wo TV
+  name: Frigate Notifications (0.3)
   author: azharkov
   homeassistant:
     min_version: 2024.11.0
@@ -91,6 +91,16 @@ blueprint:
             If set, this will override individual devices and groups above. Note: TV (far below) must be set to false.
             Base URL must start with https since telegram URL buttons only work with https.
           default: ""
+        telegram_delete_photo_after:
+          name: Delete Last Photo After (seconds, Optional)
+          description: |
+            Automatically delete the last sent photo after a specified duration (in seconds) to keep the chat clean.
+            If set to 0, photos will not be deleted automatically.
+          default: 0
+          selector:
+            number:
+              min: 0
+              unit_of_measurement: seconds
     notification_customisations:
       name: "# Notification Customisations"
       description: These are Notification Customisation Options
@@ -410,450 +420,6 @@ blueprint:
           name: Notification Channel - Android only (Optional)
           description: Create a new channel for notifications to allow custom notification sounds, vibration patterns, and override of Do Not Disturb mode. Configured directly on the device.
           default: ""
-    llm_integration:
-      name: "# LLM Integration"
-      description: Settings for Large Language Model integration.
-      icon: mdi:brain
-      collapsed: true
-      input:
-        # Placeholder for LLM settings. You will define these later.
-        # Example:
-        # llm_provider_entity:
-        #   name: LLM Provider Entity
-        #   description: Select the entity for your LLM provider.
-        #   selector:
-        #     entity:
-        #       filter:
-        #         domain: llm_conversation # Or the actual domain of your LLM integration
-        # llm_image_analyzer_prompt:
-        #   name: Image Analyzer Prompt
-        #   description: The prompt to use for analyzing images.
-        #   default: "Describe this scene, focusing on the main objects and actions. Identify any known individuals or vehicles."
-        # llm_video_analyzer_prompt:
-        #   name: Video Analyzer Prompt
-        #   description: The prompt to use for analyzing video clips.
-        #   default: "Summarize the key events in this video clip. Identify the primary subject and its actions."
-        pass # This 'pass' will be replaced with your LLM input configurations.
-    filters:
-      name: "# Filters"
-      description: These help limit when or what you are notified about.
-      icon: mdi:filter
-      collapsed: true
-      input:
-        review_severity:
-          name: Event Type
-          description: |
-            Specify the classification of Frigate events to be notified about.
-          default:
-            - alert
-            - detection
-          selector:
-            select:
-              options:
-                - label: Alerts
-                  value: alert
-                - label: Detections
-                  value: detection
-              multiple: true
-        master_condition:
-          name: Master Condition (Optional)
-          description: Set conditions that will stop the automation from running if the result is false. No other tests will be conducted later. This is a kill switch on initiation.
-          default: []
-          selector:
-            condition: {}
-        zone_filter:
-          name: Zone Filter on/off (Optional)
-          description: Enable to only notify if an object has entered a zone listed below.
-          default: false
-          selector:
-            boolean:
-        zones:
-          name: Required Zones (Optional - Enabled Above)
-          description: |
-            Enter the name of one zone at a time. It must be lowercase and include underscores as per your Frigate config.
-            By default any zone is acceptable. If you desire ALL listed zones to be entered before getting a notification, enable the multi toggle below.
-          default: []
-          selector:
-            select:
-              options:
-                - examples
-                - porch
-                - front_door
-                - side
-                - garden
-              multiple: true
-              custom_value: true
-        zone_multi:
-          name: Multi-Zone (Optional)
-          description: Require all zones specified above to be entered, instead of any listed zone. Zone Filter must be enabled also.
-          default: false
-          selector:
-            boolean:
-        zone_order_enforced:
-          name: Zone Order Enforced (Optional)
-          description: |
-            Combined with Multi-Zone, requires zones to be entered in the same order as their requirement.
-            Useful for alerting on arriving vehicles, while ignoring departing vehicles, for instance
-          default: false
-          selector:
-            boolean:
-        labels:
-          name: Object Filter (Optional)
-          description: Specify objects you wish to be notified about. Enter or select one object at a time.
-          default: ""
-          selector:
-            select:
-              options:
-                - person
-                - dog
-                - cat
-                - car
-                - package
-                - bird
-              multiple: true
-              custom_value: true
-        presence_filter:
-          name: Presence Filter (Optional)
-          description: Only notify if ALL of the selected presence entities are not "home".
-          default: ""
-          selector:
-            entity:
-              filter:
-                domain:
-                  - device_tracker
-                  - person
-                  - group
-              multiple: true
-        state_filter:
-          name: State Filter on/off (Optional)
-          description: Enable the two State Filter settings below. Only notify if the selected entity is in the specified states.
-          default: false
-          selector:
-            boolean:
-        state_entity:
-          name: State Filter Entity (Optional)
-          description: Only notify if the selected entity is in the below state. You must enable "State Filter" above to use this.
-          default: ""
-          selector:
-            entity:
-        state_filter_states:
-          name: State Filter States (Optional)
-          description: Enter the states that the above entity must be in, one at a time.
-          default: []
-          selector:
-            select:
-              options: []
-              multiple: true
-              custom_value: true
-        disable_times:
-          name: Time Filter (Optional)
-          description: Prevent notifications from being sent during the specified hours
-          default: []
-          selector:
-            select:
-              multiple: true
-              options:
-                - label: 00:00 - 00:59
-                  value: "0"
-                - label: 01:00 - 01:59
-                  value: "1"
-                - label: 02:00 - 02:59
-                  value: "2"
-                - label: 03:00 - 03:59
-                  value: "3"
-                - label: 04:00 - 04:59
-                  value: "4"
-                - label: 05:00 - 05:59
-                  value: "5"
-                - label: 06:00 - 06:59
-                  value: "6"
-                - label: 07:00 - 07:59
-                  value: "7"
-                - label: 08:00 - 08:59
-                  value: "8"
-                - label: 09:00 - 09:59
-                  value: "9"
-                - label: 10:00 - 10:59
-                  value: "10"
-                - label: 11:00 - 11:59
-                  value: "11"
-                - label: 12:00 - 12:59
-                  value: "12"
-                - label: 13:00 - 13:59
-                  value: "13"
-                - label: 14:00 - 14:59
-                  value: "14"
-                - label: 15:00 - 15:59
-                  value: "15"
-                - label: 16:00 - 16:59
-                  value: "16"
-                - label: 17:00 - 17:59
-                  value: "17"
-                - label: 18:00 - 18:59
-                  value: "18"
-                - label: 19:00 - 19:59
-                  value: "19"
-                - label: 20:00 - 20:59
-                  value: "20"
-                - label: 21:00 - 21:59
-                  value: "21"
-                - label: 22:00 - 22:59
-                  value: "22"
-                - label: 23:00 - 23:59
-                  value: "23"
-        custom_filter:
-          name: Custom Filter (Optional - Advanced)
-          description: A filter that must result in true or false but can be templated as necessary. You will need to ensure it is enclosed with appropriate \"quotes\" and \{\{brackets\}\}.
-          default: true
-    timers:
-      name: "# Timers"
-      description: These are Timers you can customise
-      icon: mdi:gesture-double-tap
-      collapsed: true
-      input:
-        cooldown:
-          name: Cooldown (Optional)
-          description: Delay before sending another notification for this camera after the last event.
-          default: 0
-          selector:
-            number:
-              max: 86400
-              min: 0
-              unit_of_measurement: seconds
-        timeout:
-          name: Timeout
-          description: Length of time the automation will wait for MQTT updates.
-          default: 2
-          selector:
-            number:
-              max: 90
-              min: 0
-              unit_of_measurement: minutes
-        silence_timer:
-          name: Silence New Notifications (Optional)
-          description: |
-            How long to pause notifications for this camera when requested as part of the actionable notification.
-            Note: Restarting Home Assistant during the period will break the timer and may disable the automation
-          default: 30
-          selector:
-            number:
-              max: 3600
-              min: 0
-              unit_of_measurement: minutes
-        loiter_timer:
-          name: Loitering Notifications (Optional)
-          description: >
-            Sends new loitering notification if a stationary object is detected for longer
-            than the specified time. 0 is off and will not send notifications.
-          default: 0
-          selector:
-            number:
-              max: 3600
-              min: 0
-              unit_of_measurement: seconds
-        initial_delay:
-          name: Delay initial notification (Optional)
-          description: |
-            How long to delay the first notification for each event. Only applies if all conditions are met when the first event is defined by frigate
-            Use this if you DO NOT use "update image" and are experiencing notifications without attached images. Start with small numbers.
-          default: 0
-          selector:
-            number:
-              max: 15
-              min: 0
-              unit_of_measurement: seconds
-        final_delay:
-          name: Delay Final notification (Optional)
-          description: |
-            How long to delay the final notification for each event. Only applies if Final Update is enabled.
-          default: 5
-          selector:
-            number:
-              max: 20
-              min: 0
-              unit_of_measurement: seconds
-    actions:
-      name: "# Action Buttons and URLS"
-      description: These are Action Buttons and URL Options
-      icon: mdi:gesture-double-tap
-      collapsed: true
-      input:
-        tap_action:
-          name: Tap Action URL
-          description:
-            The URL to open when tapping on the notification. Some presets are provided, you can also set your own by typing in the box.
-            These options define the text and URLs associated with the three action buttons at the bottom of the notification.
-          default: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-          selector:
-            select:
-              options:
-                - label: View Clip
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-                - label: View Clip (IOS)
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8"
-                - label: View GIF
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{review_id}}/review_preview.gif"
-                - label: View Snapshot
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg"
-                - label: View Stream
-                  value: "{{base_url}}/api/camera_proxy_stream/camera.{{trigger.payload_json['after']['camera'] | lower | replace('-','_')}}?token={{state_attr( 'camera.' ~ camera, 'access_token')}}"
-                - label: Open Home Assistant (web)
-                  value: "{{base_url}}/lovelace"
-                - label: Open Home Assistant (app)
-                  value: /lovelace
-                - label: Open Frigate
-                  value: /ccab4aaf_frigate/ingress
-                - label: Open Frigate (Full Access)
-                  value: /ccab4aaf_frigate-fa/ingress
-                - label: Open Frigate (proxy)
-                  value: /ccab4aaf_frigate-proxy/ingress
-                - label: Open Reolink App (Android)
-                  value: app://com.mcu.reolink
-                - label: None (Android)
-                  value: noAction
-                - label: Notification History (Android)
-                  value: settings://notification_history
-              custom_value: true
-        button_1:
-          name: Action Button 1 Text
-          description: 'The text used on the first Action button at the bottom of the notification. Set the URL below. (Default is "View Clip")'
-          default: "View Clip"
-        url_1:
-          name: Action Button 1 URL
-          description: Customise what happens when you press the first Action Button. Select from one of the preconfigured options or enter your own custom URL.
-          default: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-          selector:
-            select:
-              options:
-                - label: Silence New Notifications
-                  value: silence-{{ this.entity_id }}
-                - label: View Clip
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-                - label: View Clip (IOS)
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8"
-                - label: View GIF
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{review_id}}/review_preview.gif"
-                - label: View Snapshot
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg"
-                - label: View Stream
-                  value: "{{base_url}}/api/camera_proxy_stream/camera.{{trigger.payload_json['after']['camera'] | lower | replace('-','_')}}?token={{state_attr( 'camera.' ~ camera, 'access_token')}}"
-                - label: Open Home Assistant (web)
-                  value: "{{base_url}}/lovelace"
-                - label: Open Home Assistant (app)
-                  value: /lovelace
-                - label: Open Frigate
-                  value: /ccab4aaf_frigate/ingress
-                - label: Open Frigate (Full Access)
-                  value: /ccab4aaf_frigate-fa/ingress
-                - label: Open Frigate (proxy)
-                  value: /ccab4aaf_frigate-proxy/ingress
-                - label: Open Reolink App (Android)
-                  value: app://com.mcu.reolink
-                - label: Custom Action (Manual Trigger)
-                  value: custom-{{ this.entity_id }}
-              custom_value: true
-        icon_1:
-          name: Action Button 1 icon - iOS Only
-          description: Customise the Icon on the first Action Button. Only the iOS SFSymbols library is supported, not mdi:icons. e.g., sfsymbols:bell
-          default: ""
-        button_2:
-          name: Action Button 2 Text
-          description: "The text used on the second Action button at the bottom of the notification. Set the URL below."
-          default: "View Snapshot"
-        url_2:
-          name: Action Button 2 URL
-          description: Customise what happens when you press the second Action Button. Select from one of the preconfigured options or enter your own custom URL.
-          default: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg"
-          selector:
-            select:
-              options:
-                - label: Silence New Notifications
-                  value: silence-{{ this.entity_id }}
-                - label: View Clip
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-                - label: View Clip (IOS)
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8"
-                - label: View Snapshot
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg"
-                - label: View Stream
-                  value: "{{base_url}}/api/camera_proxy_stream/camera.{{trigger.payload_json['after']['camera'] | lower | replace('-','_')}}?token={{state_attr( 'camera.' ~ camera, 'access_token')}}"
-                - label: Open Home Assistant (web)
-                  value: "{{base_url}}/lovelace"
-                - label: Open Home Assistant (app)
-                  value: /lovelace
-                - label: Open Frigate
-                  value: /ccab4aaf_frigate/ingress
-                - label: Open Frigate (Full Access)
-                  value: /ccab4aaf_frigate-fa/ingress
-                - label: Open Frigate (proxy)
-                  value: /ccab4aaf_frigate-proxy/ingress
-                - label: Open Reolink App (Android)
-                  value: app://com.mcu.reolink
-                - label: Custom Action (Manual Trigger)
-                  value: custom-{{ this.entity_id }}
-              custom_value: true
-        icon_2:
-          name: Action Button 2 icon - iOS Only
-          description: Customise the Icon on the second Action Button. Only the iOS SFSymbols library is supported, not mdi:icons. e.g., sfsymbols:bell
-          default: ""
-        button_3:
-          name: Action Button 3 Text
-          description: "The text used on the third Action button at the bottom of the notification. Set the URL below."
-          default: "Silence New Notifications"
-        url_3:
-          name: Action Button 3 URL
-          description: Customise what happens when you press the third Action Button. Select from one of the preconfigured options or enter your own custom URL.
-          default: silence-{{ this.entity_id }}
-          selector:
-            select:
-              options:
-                - label: Silence New Notifications
-                  value: silence-{{ this.entity_id }}
-                - label: View Clip
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/clip.mp4"
-                - label: View Clip (IOS)
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/{{camera}}/master.m3u8"
-                - label: View Snapshot
-                  value: "{{base_url}}/api/frigate{{client_id}}/notifications/{{id}}/snapshot.jpg"
-                - label: View Stream
-                  value: "{{base_url}}/api/camera_proxy_stream/camera.{{trigger.payload_json['after']['camera'] | lower | replace('-','_')}}?token={{state_attr( 'camera.' ~ camera, 'access_token')}}"
-                - label: Open Home Assistant (web)
-                  value: "{{base_url}}/lovelace"
-                - label: Open Home Assistant (app)
-                  value: /lovelace
-                - label: Open Frigate
-                  value: /ccab4aaf_frigate/ingress
-                - label: Open Frigate (Full Access)
-                  value: /ccab4aaf_frigate-fa/ingress
-                - label: Open Frigate (proxy)
-                  value: /ccab4aaf_frigate-proxy/ingress
-                - label: Open Reolink App (Android)
-                  value: app://com.mcu.reolink
-                - label: Custom Action (Manual Trigger)
-                  value: custom-{{ this.entity_id }}
-              custom_value: true
-        icon_3:
-          name: Action Button 3 icon - iOS Only
-          description: Customise the Icon on the third Action Button. Only the iOS SFSymbols library is supported, not mdi:icons. e.g., sfsymbols:bell
-          default: ""
-        custom_action_manual:
-          name: Custom Action (Manual Trigger)
-          description: Customisable action that you can trigger with the Custom Action buttons in the notification. Select Custom Action on any Action Button above.
-          selector:
-            action: {}
-          default: []
-        custom_action_auto:
-          name: Custom Action (Auto Trigger)
-          description: Customisable action that will trigger on the initial notification (subject to all other notification conditions).
-          selector:
-            action: {}
-          default: []
-        custom_action_auto_multi:
-          name: Custom Action (Auto Trigger in Loop)
-          description: Customisable action that will trigger on all subsequent notifications (subject to all other notification conditions). If you want it to also trigger on the initial notification, you must enter it in both input fields.
-          selector:
-            action: {}
-          default: []
     debug:
       name: "# DEBUG"
       description: These are DEBUG Options
@@ -901,10 +467,28 @@ triggers:
     event_data:
       action: "custom-{{ this.entity_id}}"
     id: custom
+  - trigger: event
+    event_type: telegram_callback
+    event_data:
+      command: /video
+    id: video
+    trigger: event
+  - trigger: event
+    event_type: telegram_callback
+    event_data:
+      command: /latest_photo
+    id: latest_photo
+    trigger: event
+  - trigger: event
+    event_type: telegram_callback
+    event_data:
+      command: /silent
+    id: silent
+    trigger: event
 variables:
   input_camera: !input camera
   input_camera_name: "{{input_camera|expand|map(attribute='attributes.camera_name', default='none')|list}}"
-  camera: "{{trigger.payload_json['after']['camera'] if trigger.id == 'frigate-event'}}"
+  camera: "{{trigger.payload_json['after']['camera'] if trigger.id == 'frigate-event' or trigger.id == 'video' or trigger.id == 'latest_photo' or trigger.id == 'silent' }}"
   camera_name: >-
     {{ {
       'domofon': 'Домофон',
@@ -937,6 +521,7 @@ variables:
   notify_group_target: "{{ notify_group | lower | regex_replace('^notify\\.', '') | replace(' ','_') }}"
   telegram_chat_id: !input notify_telegram_chat_id
   telegram: "{{true if (telegram_chat_id | length > 0) else false}}"
+  telegram_delete_photo_after: !input telegram_delete_photo_after
   zone_only: !input zone_filter
   input_zones: !input zones
   zones: "{{ input_zones | list | lower }}"
@@ -952,7 +537,7 @@ variables:
   loiter_timer: !input loiter_timer
   initial_delay: !input initial_delay
   final_delay: !input final_delay
-  fps: "{{ states('sensor.' + camera + '_camera_fps')|int(5) }}"
+  fps: "{{ states('sensor.' + camera + '_camera_fps')|int(5) if camera else 5 }}" # Added check for camera
   state_only: !input state_filter
   input_entity: !input state_entity
   input_states: !input state_filter_states
@@ -966,6 +551,10 @@ variables:
   debug: !input debug
   redacted: !input redacted
   master_condition: !input master_condition
+  # LLM Variables
+  llm_provider_entity: !input llm_provider_entity
+  llm_image_analyzer_prompt: !input llm_image_analyzer_prompt
+  llm_video_analyzer_prompt: !input llm_video_analyzer_prompt
   # Dynamic Variables per event
   severity_satisfied: "{{input_severity|select('in', severity)|list|length > 0 if trigger.id == 'frigate-event'}}"
   objects: "{{ trigger.payload_json['after']['data']['objects'] if trigger.id == 'frigate-event' }}"
@@ -1185,7 +774,7 @@ actions:
                               TEST: {{'PASS' if objects_satisfied else 'FAIL'}} - {{objects}}
                             presence entity (not home):
                               Entity: {{presence_entity}},
-                              TEST:  {{'PASS' if not initial_home else 'FAIL'}},
+                              TEST:  {{'PASS' if not home else 'FAIL'}},
                             disabled times: {{disable_times}},
                             State Filter:
                               State Filter toggle on: {{state_only}},
@@ -1229,10 +818,10 @@ actions:
                     choose:
                       - conditions: "{{ telegram }}"
                         sequence:
-                          - action: telegram_bot.send_photo
-                            data:
-                              url: "{{attachment | replace( base_url, telegram_base_url )}}"
-                              caption: >-
+                          - variables:
+                              photo_url: "{{attachment | replace( base_url, telegram_base_url )}}"
+                              # Construct the caption, similar to your example, incorporating LLM if available
+                              caption_text: >-
                                 {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} на улице.
                                 {% elif (label == "person") %}🙍‍♂️ Кто-то на улице.
                                 {% elif (label == "cat") %}🐱 Кот на улице.
@@ -1242,24 +831,39 @@ actions:
                                 🕘 Время обнаружения {{start_time | timestamp_custom("%H-%M") }} часов.
                                 👀 Камера {{ camera_name.get(camera,camera) }}
                                 {% if llm_response_image is defined and llm_response_image.response_text is defined and llm_response_image.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response_image.response_text }} {% endif %}
-                              inline_keyboard:
-                                - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
-                                  title: "{{button_1}}"
-                                  uri: "{{url_1}}"
-                                  icon: "{{icon_1}}"
-                                  destructive: "{{not '/' in url_1}}"
-                                - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
-                                  title: "{{button_2}}"
-                                  uri: "{{url_2}}"
-                                  icon: "{{icon_2}}"
-                                  destructive: "{{not '/' in url_2}}"
-                                - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
-                                  title: "{{button_3}}"
-                                  uri: "{{url_3}}"
-                                  icon: "{{icon_3}}"
-                                  destructive: "{{not '/' in url_3}}"
-                              target: "{{telegram_chat_id}}"
-                              parse_mode: html
+                              # Use a separate action for deleting the photo after a delay
+                              - service: telegram_bot.send_photo
+                                data:
+                                  target: "{{telegram_chat_id}}"
+                                  photo: "{{photo_url}}"
+                                  caption: "{{caption_text}}"
+                                  inline_keyboard:
+                                    - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
+                                      title: "{{button_1}}"
+                                      uri: "{{url_1}}"
+                                      icon: "{{icon_1}}"
+                                      destructive: "{{not '/' in url_1}}"
+                                    - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
+                                      title: "{{button_2}}"
+                                      uri: "{{url_2}}"
+                                      icon: "{{icon_2}}"
+                                      destructive: "{{not '/' in url_2}}"
+                                    - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
+                                      title: "{{button_3}}"
+                                      uri: "{{url_3}}"
+                                      icon: "{{icon_3}}"
+                                      destructive: "{{not '/' in url_3}}"
+                                  response_variable: sent_photo_info # Store response to get message_id
+                              # Action to delete the photo after a delay
+                              - choose:
+                                  - conditions: "{{ telegram_delete_photo_after > 0 }}"
+                                    sequence:
+                                      - delay:
+                                          seconds: "{{ telegram_delete_photo_after }}"
+                                      - service: telegram_bot.delete_message
+                                        data:
+                                          chat_id: "{{ sent_photo_info.chats[0].chat_id }}"
+                                          message_id: "{{ sent_photo_info.chats[0].message_id }}"
                       - conditions: "{{ not notify_group_target }}"
                         sequence:
                           - device_id: !input notify_device
@@ -1569,10 +1173,9 @@ actions:
                                         - "{{ event['type'] == 'end' }}"
                                         - "{{ video | length > 0 }}"
                                       sequence:
-                                        - action: telegram_bot.send_video
-                                          data:
-                                            target: "{{telegram_chat_id}}"
-                                            caption: >-
+                                        - variables:
+                                            video_url: "{{video | replace(base_url, telegram_base_url)}}"
+                                            caption_text: >-
                                               {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} на улице.
                                               {% elif (label == "person") %}🙍‍♂️ Кто-то на улице.
                                               {% elif (label == "cat") %}🐱 Кот на улице.
@@ -1583,7 +1186,46 @@ actions:
                                               🆔(id {{id}})
                                               👀 Камера {{ camera_name.get(camera,camera) }}
                                               {% if llm_response is defined and llm_response.response_text is defined and llm_response.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response.response_text }} {% endif %}
-                                            url: "{{ video | replace(base_url, telegram_base_url) }}"
+                                          - service: telegram_bot.send_video
+                                            data:
+                                              target: "{{telegram_chat_id}}"
+                                              video: "{{video_url}}"
+                                              caption: "{{caption_text}}"
+                                              inline_keyboard:
+                                                - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
+                                                  title: "{{button_1}}"
+                                                  uri: "{{url_1}}"
+                                                  icon: "{{icon_1}}"
+                                                  destructive: "{{not '/' in url_1}}"
+                                                - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
+                                                  title: "{{button_2}}"
+                                                  uri: "{{url_2}}"
+                                                  icon: "{{icon_2}}"
+                                                  destructive: "{{not '/' in url_2}}"
+                                                - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
+                                                  title: "{{button_3}}"
+                                                  uri: "{{url_3}}"
+                                                  icon: "{{icon_3}}"
+                                                  destructive: "{{not '/' in url_3}}"
+                                              parse_mode: html
+                                    default:
+                                      - variables:
+                                          photo_url: "{{attachment | replace( base_url, telegram_base_url )}}"
+                                          caption_text: >-
+                                            {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} на улице.
+                                            {% elif (label == "person") %}🙍‍♂️ Кто-то на улице.
+                                            {% elif (label == "cat") %}🐱 Кот на улице.
+                                            {% elif (label == "dog") %}🐶 Собака на улице.
+                                            {%elif (label == "bird") %}🦅 Птица на улице.
+                                            {%endif %}
+                                            🕘 Время обнаружения {{start_time | timestamp_custom("%H-%M") }} часов.
+                                            👀 Камера {{ camera_name.get(camera,camera) }}
+                                            {% if llm_response_image is defined and llm_response_image.response_text is defined and llm_response_image.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response_image.response_text }} {% endif %}
+                                        - service: telegram_bot.send_photo
+                                          data:
+                                            target: "{{telegram_chat_id}}"
+                                            photo: "{{photo_url}}"
+                                            caption: "{{caption_text}}"
                                             inline_keyboard:
                                               - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
                                                 title: "{{button_1}}"
@@ -1600,68 +1242,36 @@ actions:
                                                 uri: "{{url_3}}"
                                                 icon: "{{icon_3}}"
                                                 destructive: "{{not '/' in url_3}}"
-                                            parse_mode: html
-                                  default:
-                                    - action: telegram_bot.send_photo
-                                      data:
-                                        target: "{{telegram_chat_id}}"
-                                        caption: >-
-                                          {% if (label "car") or (label "car-verified")%}🚗 Машина {{sublabel}} на улице.
-                                          {% elif (label == "person") %}🙍‍♂️ Кто-то на улице.
-                                          {% elif (label == "cat") %}🐱 Кот на улице.
-                                          {% elif (label == "dog") %}🐶 Собака на улице.
-                                          {%elif (label == "bird") %}🦅 Птица на улице.
-                                          {%endif %}
-                                          🕘 Время обнаружения {{start_time | timestamp_custom("%H-%M") }} часов.
-                                          👀 Камера {{ camera_name.get(camera,camera) }}
-                                          {% if llm_response_image is defined and llm_response_image.response_text is defined and llm_response_image.response_text|trim != '' %} 🔤 ИИ ответ: {{ llm_response_image.response_text }} {% endif %}
-                                        url: "{{attachment | replace(base_url,telegram_base_url)}}"
-                                        inline_keyboard:
-                                          - action: "{{ 'URI' if '/' in url_1 else url_1 }}"
-                                            title: "{{button_1}}"
-                                            uri: "{{url_1}}"
-                                            icon: "{{icon_1}}"
-                                            destructive: "{{not '/' in url_1}}"
-                                          - action: "{{ 'URI' if '/' in url_2 else url_2 }}"
-                                            title: "{{button_2}}"
-                                            uri: "{{url_2}}"
-                                            icon: "{{icon_2}}"
-                                            destructive: "{{not '/' in url_2}}"
-                                          - action: "{{ 'URI' if '/' in url_3 else url_3 }}"
-                                            title: "{{button_3}}"
-                                            uri: "{{url_3}}"
-                                            icon: "{{icon_3}}"
-                                            destructive: "{{not '/' in url_3}}"
-                                        parse_mode: html
-                            - if: "{{tts and (not tts_helper or not alert_once or (tts_helper and id not in states(tts_helper)))}}"
-                              then:
-                                sequence:
-                                  - choose:
-                                      - conditions: "{{ not notify_group_target }}"
+                                          response_variable: sent_photo_info
+                                    - if: "{{tts and (not tts_helper or not alert_once or (tts_helper and id not in states(tts_helper)))}}"
+                                      then:
                                         sequence:
-                                          - device_id: !input notify_device
-                                            domain: mobile_app
-                                            type: notify
-                                            message: "{{'TTS'}}"
+                                          - choose:
+                                              - conditions: "{{ not notify_group_target }}"
+                                                sequence:
+                                                  - device_id: !input notify_device
+                                                    domain: mobile_app
+                                                    type: notify
+                                                    message: "{{'TTS'}}"
+                                                    data:
+                                                      tag: "{{ tag }}{{'-loitering-tts' if loitering}}"
+                                                      channel: "{{'alarm_stream' if critical else channel}}"
+                                                      alert_once: "{{ alert_once }}"
+                                                      tts_text: "{{message}}"
+                                            default:
+                                              - action: "notify.{{ notify_group_target }}"
+                                                data:
+                                                  message: "{{'TTS'}}"
+                                                  data:
+                                                    tag: "{{ tag }}{{'-loitering-tts' if loitering}}"
+                                                    channel: "{{'alarm_stream' if critical else channel}}"
+                                                    alert_once: "{{ alert_once }}"
+                                                    tts_text: "{{message}}"
+                                          - action: input_text.set_value
                                             data:
-                                              tag: "{{ tag }}{{'-loitering-tts' if loitering}}"
-                                              channel: "{{'alarm_stream' if critical else channel}}"
-                                              alert_once: "{{ alert_once }}"
-                                              tts_text: "{{message}}"
-                                    default:
-                                      - action: "notify.{{ notify_group_target }}"
-                                        data:
-                                          message: "{{'TTS'}}"
-                                          data:
-                                            tag: "{{ tag }}{{'-loitering-tts' if loitering}}"
-                                            channel: "{{'alarm_stream' if critical else channel}}"
-                                            alert_once: "{{ alert_once }}"
-                                            tts_text: "{{message}}"
-                                  - action: input_text.set_value
-                                    data:
-                                      value: |
-                                        {% set newIds = id + '|' + states(tts_helper) %}
-                                        {{ newIds[:250] }}
-                                    target:
-                                      entity_id: "{{tts_helper}}"
+                                              value: |
+                                                {% set newIds = id + '|' + states(tts_helper) %}
+                                                {{ newIds[:250] }}
+                                            target:
+                                              entity_id: "{{tts_helper}}"
               until: "{{ not wait.trigger or wait.trigger.payload_json['type'] == 'end' }}"
